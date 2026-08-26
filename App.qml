@@ -284,7 +284,16 @@ FloatingWindow {
     onExited: {
       var data = root.output(saveOutput.text, "Could not save note."); root.busy = false
       if (!root.setError(data, "Could not save note.")) return
-      root.currentNote = data.note || root.currentNote; root.dirty = false; root.errorMessage = "Saved"
+      root.currentNote = data.note || root.currentNote
+      if (data.note) {
+        for (var i = 0; i < notesModel.count; i++) {
+          if (Number(notesModel.get(i).id) === Number(data.note.id)) {
+            notesModel.set(i, data.note)
+            break
+          }
+        }
+      }
+      root.dirty = false; root.errorMessage = "Saved"
       if (root.saveReturnToList) root.showList()
     }
   }
