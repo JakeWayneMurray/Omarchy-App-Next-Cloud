@@ -6,8 +6,15 @@ import Quickshell.Io
 import qs.Commons
 import qs.Ui
 
-Item {
+FloatingWindow {
   id: root
+
+  title: "Nextcloud Notes"
+  color: Color.background
+  visible: true
+  implicitWidth: 1080
+  implicitHeight: 720
+  minimumSize: Qt.size(760, 520)
 
   readonly property string helperPath: Qt.resolvedUrl("nextcloud_client.py").toString().replace("file://", "")
   property int page: 0 // 0 login, 1 notes, 2 editor
@@ -79,16 +86,7 @@ Item {
     statusProc.running = true
   }
 
-  FloatingWindow {
-    id: window
-    title: "Nextcloud Notes"
-    color: Color.background
-    visible: true
-    implicitWidth: 1080
-    implicitHeight: 720
-    minimumSize: Qt.size(760, 520)
-
-    Column {
+  Column {
       anchors.fill: parent
       anchors.margins: Style.space(24)
       spacing: Style.space(18)
@@ -164,7 +162,6 @@ Item {
       }
 
       Text { visible: root.errorMessage !== ""; text: root.errorMessage; width: parent.width; wrapMode: Text.WordWrap; color: Color.urgent; font.family: Style.font.family; font.pixelSize: Style.font.caption }
-    }
   }
 
   ListModel { id: notesModel }
