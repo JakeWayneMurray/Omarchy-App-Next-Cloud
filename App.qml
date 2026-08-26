@@ -146,7 +146,7 @@ FloatingWindow {
 
         ColumnLayout {
           spacing: Style.space(10)
-          Row {
+          RowLayout {
             Layout.fillWidth: true; spacing: Style.space(8)
             Button { text: "‹ Notes"; bordered: true; onClicked: root.showList() }
             Text { text: currentNote.readonly ? "Read-only" : "Edit note"; color: Qt.darker(Color.foreground, 1.45); font.family: Style.font.family; font.pixelSize: Style.font.caption; verticalAlignment: Text.AlignVCenter; Layout.fillWidth: true }
@@ -156,7 +156,27 @@ FloatingWindow {
           TextField { id: categoryField; Layout.fillWidth: true; placeholderText: "Category (optional)"; enabled: !currentNote.readonly }
           Rectangle {
             Layout.fillWidth: true; Layout.fillHeight: true; color: Qt.darker(Color.background, 1.08); radius: Style.cornerRadius
-            TextArea { id: bodyField; anchors.fill: parent; anchors.margins: Style.space(10); wrapMode: TextEdit.Wrap; color: Color.foreground; font.family: Style.font.family; font.pixelSize: Style.font.body; background: null; readOnly: currentNote.readonly }
+            ScrollView {
+              anchors.fill: parent
+              anchors.margins: Style.space(3)
+              clip: true
+              TextArea {
+                id: bodyField
+                width: parent.width
+                height: Math.max(contentHeight, parent.height)
+                wrapMode: TextEdit.Wrap
+                color: Color.foreground
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                background: null
+                readOnly: currentNote.readonly
+                selectByMouse: true
+                leftPadding: Style.space(8)
+                rightPadding: Style.space(8)
+                topPadding: Style.space(8)
+                bottomPadding: Style.space(8)
+              }
+            }
           }
         }
       }
