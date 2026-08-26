@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+app_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+import_path=/usr/share/omarchy/shell
+if [ -n "${QML2_IMPORT_PATH:-}" ]; then
+  import_path="$import_path:$QML2_IMPORT_PATH"
+fi
+export QML2_IMPORT_PATH="$import_path"
+exec quickshell --path "$app_dir/App.qml" "$@"

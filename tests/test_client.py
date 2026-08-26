@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 
-spec = importlib.util.spec_from_file_location("nextcloud_notes", Path(__file__).parents[1] / "nextcloud_notes.py")
+spec = importlib.util.spec_from_file_location("nextcloud_client", Path(__file__).parents[1] / "nextcloud_client.py")
 client = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(client)
 

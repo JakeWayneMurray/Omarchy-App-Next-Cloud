@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Nextcloud Notes
 Comment=Read and edit notes from a self-hosted Nextcloud server
-Exec=python3 /usr/local/lib/omarchy-app-nextcloud-notes/nextcloud_notes.py
+Exec=/usr/local/lib/omarchy-app-nextcloud-notes/run.sh
 Icon=accessories-text-editor
 Terminal=false
 Type=Application
