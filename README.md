@@ -16,7 +16,7 @@ notes a full-sized window for reading and editing.
 - Edited notes are pushed automatically about every 30 seconds while open, or
   immediately with Save.
 - Password stored in the desktop keyring using `secret-tool`; URL and username
-  are stored in `~/.config/omarchy/nextcloud-notes-app.json`; cached notes live
+  are stored in `~/.config/omarchy/nextcloud-notes-app/config.json`; cached notes live
   under `~/.config/omarchy/nextcloud-notes-app/`.
 - Uses Quickshell, Qt Quick Controls, and the installed Omarchy `qs.Commons`
   and `qs.Ui` components; Python is only a small JSON-line API bridge.
