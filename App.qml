@@ -23,6 +23,9 @@ FloatingWindow {
   property string serverUrl: ""
   property string username: ""
   property var currentNote: ({readonly: false})
+  property bool updatingEditor: false
+  property bool dirty: false
+  property bool saveReturnToList: false
 
   function command(args) { return ["python3", root.helperPath].concat(args) }
   function clearError() { errorMessage = "" }
@@ -52,29 +55,36 @@ FloatingWindow {
     listProc.command = command(["list"])
     listProc.running = true
   }
+  function loadCache() {
+    cacheProc.command = command(["cache"])
+    cacheProc.running = true
+  }
   function openNote(id) {
     if (busy || !id) return
     busy = true; clearError()
     getProc.command = command(["get", String(id)])
     getProc.running = true
   }
-  function saveNote() {
+  function saveNote(returnToList) {
     if (busy || currentNote.readonly) return
     busy = true; clearError()
+    saveReturnToList = returnToList === true
     saveProc.payload = JSON.stringify({id: currentNote.id, title: titleField.text,
-      category: categoryField.text, content: bodyField.text, etag: currentNote.etag || ""})
+      content: bodyField.text, etag: currentNote.etag || ""})
     saveProc.command = command(["save"])
     saveProc.running = true
   }
   function showEditor(note) {
+    updatingEditor = true
     currentNote = note
     page = 2
     titleField.text = note.title || ""
-    categoryField.text = note.category || ""
     bodyField.text = note.content || ""
+    dirty = false
+    updatingEditor = false
     Qt.callLater(function() { bodyField.forceActiveFocus() })
   }
-  function showList() { page = 1; loadNotes() }
+  function showList() { page = 1 }
   function signOut() {
     page = 0; serverUrl = ""; username = ""
     urlField.text = ""; userField.text = ""; passwordField.text = ""
@@ -84,6 +94,13 @@ FloatingWindow {
   Component.onCompleted: {
     statusProc.command = command(["status"])
     statusProc.running = true
+  }
+
+  Timer {
+    interval: 30000
+    repeat: true
+    running: true
+    onTriggered: if (root.page === 2 && root.dirty && !root.busy && !root.currentNote.readonly) root.saveNote(false)
   }
 
   Column {
@@ -133,10 +150,9 @@ FloatingWindow {
               delegate: Button {
                 required property var modelData
                 width: ListView.view.width; leftAlign: true; bordered: false
-                visible: !searchField.text.trim() || String(modelData.title + " " + modelData.category).toLowerCase().indexOf(searchField.text.trim().toLowerCase()) >= 0
+                visible: !searchField.text.trim() || String(modelData.title).toLowerCase().indexOf(searchField.text.trim().toLowerCase()) >= 0
                 height: visible ? Style.space(60) : 0
                 text: (modelData.favorite ? "★ " : "") + String(modelData.title)
-                tooltipText: modelData.category || "Uncategorized"
                 onClicked: root.openNote(Number(modelData.id))
               }
             }
@@ -149,11 +165,10 @@ FloatingWindow {
           RowLayout {
             Layout.fillWidth: true; spacing: Style.space(8)
             Button { text: "‹ Notes"; bordered: true; onClicked: root.showList() }
-            Text { text: currentNote.readonly ? "Read-only" : "Edit note"; color: Qt.darker(Color.foreground, 1.45); font.family: Style.font.family; font.pixelSize: Style.font.caption; verticalAlignment: Text.AlignVCenter; Layout.fillWidth: true }
-            Button { text: root.busy ? "Saving…" : "Save"; bordered: true; enabled: !currentNote.readonly && !root.busy; onClicked: root.saveNote() }
+            Item { Layout.fillWidth: true }
+            Button { text: root.busy ? "Saving…" : "Save"; bordered: true; enabled: !currentNote.readonly && !root.busy; onClicked: root.saveNote(true) }
           }
-          TextField { id: titleField; Layout.fillWidth: true; placeholderText: "Note title"; enabled: !currentNote.readonly }
-          TextField { id: categoryField; Layout.fillWidth: true; placeholderText: "Category (optional)"; enabled: !currentNote.readonly }
+          TextField { id: titleField; Layout.fillWidth: true; placeholderText: "Note title"; enabled: !currentNote.readonly; onTextChanged: if (!root.updatingEditor) root.dirty = true }
           Rectangle {
             Layout.fillWidth: true; Layout.fillHeight: true; color: Qt.darker(Color.background, 1.08); radius: Style.cornerRadius
             ScrollView {
@@ -175,6 +190,7 @@ FloatingWindow {
                 rightPadding: Style.space(8)
                 topPadding: Style.space(8)
                 bottomPadding: Style.space(8)
+                onTextChanged: if (!root.updatingEditor) root.dirty = true
               }
             }
           }
@@ -191,7 +207,18 @@ FloatingWindow {
     stdout: StdioCollector { id: statusOutput; waitForEnd: true }
     onExited: {
       var data = root.output(statusOutput.text, "Could not read Nextcloud settings.")
-      if (data.configured === true) { root.serverUrl = String(data.url || ""); root.username = String(data.username || ""); root.page = 1; root.loadNotes() }
+      if (data.configured === true) { root.serverUrl = String(data.url || ""); root.username = String(data.username || ""); root.loadCache() }
+    }
+  }
+  Process {
+    id: cacheProc
+    stdout: StdioCollector { id: cacheOutput; waitForEnd: true }
+    onExited: {
+      var data = root.output(cacheOutput.text, "Could not read the notes cache.")
+      if (data.ok && data.cached) {
+        notesModel.clear(); (data.notes || []).forEach(function(note) { notesModel.append(note) })
+        root.page = 1
+      } else root.loadNotes()
     }
   }
   Process {
@@ -229,7 +256,8 @@ FloatingWindow {
     onExited: {
       var data = root.output(saveOutput.text, "Could not save note."); root.busy = false
       if (!root.setError(data, "Could not save note.")) return
-      root.currentNote = data.note || root.currentNote; root.errorMessage = "Saved"; root.showList()
+      root.currentNote = data.note || root.currentNote; root.dirty = false; root.errorMessage = "Saved"
+      if (root.saveReturnToList) root.showList()
     }
   }
 }

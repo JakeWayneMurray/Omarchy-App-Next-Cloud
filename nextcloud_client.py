@@ -17,6 +17,7 @@ from pathlib import Path
 APP_ID = "omarchy-app-nextcloud-notes"
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "omarchy" / "nextcloud-notes-app"
 CONFIG_FILE = CONFIG_DIR / "config.json"
+CACHE_FILE = CONFIG_DIR / "notes-cache.json"
 
 
 class NotesError(RuntimeError):
@@ -52,6 +53,27 @@ def write_config(data: dict) -> None:
         temporary = handle.name
     os.chmod(temporary, 0o600)
     os.replace(temporary, CONFIG_FILE)
+
+
+def write_cache(notes: list[dict]) -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=CONFIG_DIR, delete=False) as handle:
+        json.dump({"notes": notes}, handle, ensure_ascii=False, separators=(",", ":"))
+        handle.write("\n")
+        temporary = handle.name
+    os.chmod(temporary, 0o600)
+    os.replace(temporary, CACHE_FILE)
+
+
+def update_cache(note: dict) -> None:
+    try:
+        cached = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+        notes = cached.get("notes", []) if isinstance(cached, dict) else []
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        notes = []
+    notes = [item for item in notes if isinstance(item, dict) and item.get("id") != note.get("id")]
+    notes.append(note)
+    write_cache(notes)
 
 
 def keyring(*args: str, stdin: str | None = None) -> subprocess.CompletedProcess:
@@ -144,7 +166,18 @@ def main() -> None:
             notes = request(base, user, password, "notes?chunkSize=500")
             if not isinstance(notes, list):
                 raise NotesError("Nextcloud returned an invalid notes list.")
-            emit({"ok": True, "notes": [normalize(note) for note in notes if isinstance(note, dict)]})
+            normalized = [normalize(note) for note in notes if isinstance(note, dict)]
+            write_cache(normalized)
+            emit({"ok": True, "notes": normalized})
+        elif command == "cache":
+            try:
+                cached = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+                notes = cached.get("notes", []) if isinstance(cached, dict) else []
+            except (FileNotFoundError, json.JSONDecodeError, OSError):
+                notes = []
+            if not isinstance(notes, list):
+                notes = []
+            emit({"ok": True, "cached": CACHE_FILE.exists(), "notes": notes})
         elif command == "get" and len(sys.argv) == 3:
             base, user, password = connection()
             note = request(base, user, password, f"notes/{urllib.parse.quote(sys.argv[2], safe='')}")
@@ -154,15 +187,16 @@ def main() -> None:
         elif command == "save":
             payload = json.loads(sys.stdin.readline())
             base, user, password = connection()
-            body = {"title": str(payload.get("title", "Untitled note")), "content": str(payload.get("content", "")),
-                    "category": str(payload.get("category", ""))}
+            body = {"title": str(payload.get("title", "Untitled note")), "content": str(payload.get("content", ""))}
             note_id = str(payload.get("id", "")).strip()
             path = f"notes/{urllib.parse.quote(note_id, safe='')}" if note_id else "notes"
             method = "PUT" if note_id else "POST"
             note = request(base, user, password, path, method, body, str(payload.get("etag", "")))
             if not isinstance(note, dict):
                 raise NotesError("Nextcloud returned an invalid saved note.")
-            emit({"ok": True, "note": normalize(note)})
+            normalized = normalize(note)
+            update_cache(normalized)
+            emit({"ok": True, "note": normalized})
         else:
             emit({"ok": False, "error": "Usage: status|configure|list|get ID|save"})
     except (NotesError, json.JSONDecodeError) as exc:

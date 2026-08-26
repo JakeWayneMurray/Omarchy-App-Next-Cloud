@@ -9,10 +9,15 @@ notes a full-sized window for reading and editing.
 - Login with a server URL, username, and password or app password.
 - Supports both `http://` and `https://` server URLs. HTTP is useful for a
   trusted local network; HTTPS is recommended on untrusted networks.
-- Searchable notes list with favorite and category indicators.
+- Searchable notes list with favorite indicators.
 - Full note view and editing with optimistic concurrency via `ETag`.
+- Loads the last successful notes list from a local cache immediately on startup;
+  use Refresh for an explicit server reload.
+- Edited notes are pushed automatically about every 30 seconds while open, or
+  immediately with Save.
 - Password stored in the desktop keyring using `secret-tool`; URL and username
-  are stored in `~/.config/omarchy/nextcloud-notes-app.json`.
+  are stored in `~/.config/omarchy/nextcloud-notes-app.json`; cached notes live
+  under `~/.config/omarchy/nextcloud-notes-app/`.
 - Uses Quickshell, Qt Quick Controls, and the installed Omarchy `qs.Commons`
   and `qs.Ui` components; Python is only a small JSON-line API bridge.
 
