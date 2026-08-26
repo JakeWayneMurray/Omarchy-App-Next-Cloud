@@ -23,9 +23,11 @@ FloatingWindow {
   property string serverUrl: ""
   property string username: ""
   property var currentNote: ({readonly: false})
+  property string currentMarkdown: ""
   property bool updatingEditor: false
   property bool dirty: false
   property bool saveReturnToList: false
+  property bool previewMode: false
 
   function command(args) { return ["python3", root.helperPath].concat(args) }
   function clearError() { errorMessage = "" }
@@ -83,8 +85,10 @@ FloatingWindow {
     updatingEditor = true
     currentNote = note
     page = 2
+    previewMode = false
     titleField.text = note.title || ""
     bodyField.text = note.content || ""
+    currentMarkdown = note.content || ""
     dirty = false
     updatingEditor = false
     Qt.callLater(function() { bodyField.forceActiveFocus() })
@@ -171,12 +175,31 @@ FloatingWindow {
             Layout.fillWidth: true; spacing: Style.space(8)
             Button { text: "‹ Notes"; bordered: true; onClicked: root.showList() }
             Item { Layout.fillWidth: true }
+            Button { text: root.previewMode ? "Edit" : "Preview"; bordered: true; onClicked: root.previewMode = !root.previewMode }
             Button { text: root.busy ? "Saving…" : "Save"; bordered: true; enabled: !currentNote.readonly && !root.busy; onClicked: root.saveNote(true) }
           }
           TextField { id: titleField; Layout.fillWidth: true; placeholderText: "Note title"; enabled: !currentNote.readonly; onTextChanged: if (!root.updatingEditor) root.dirty = true }
           Rectangle {
             Layout.fillWidth: true; Layout.fillHeight: true; color: Qt.darker(Color.background, 1.08); radius: Style.cornerRadius
             ScrollView {
+              id: markdownPreview
+              visible: root.previewMode
+              anchors.fill: parent
+              anchors.margins: Style.space(12)
+              clip: true
+              Text {
+                width: markdownPreview.width
+                text: root.currentMarkdown
+                textFormat: Text.MarkdownText
+                wrapMode: Text.WordWrap
+                color: Color.foreground
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                linkColor: Color.accent
+              }
+            }
+            ScrollView {
+              visible: !root.previewMode
               anchors.fill: parent
               anchors.margins: Style.space(3)
               clip: true
@@ -195,7 +218,7 @@ FloatingWindow {
                 rightPadding: Style.space(8)
                 topPadding: Style.space(8)
                 bottomPadding: Style.space(8)
-                onTextChanged: if (!root.updatingEditor) root.dirty = true
+                onTextChanged: { root.currentMarkdown = text; if (!root.updatingEditor) root.dirty = true }
               }
             }
           }

@@ -11,6 +11,8 @@ notes a full-sized window for reading and editing.
   trusted local network; HTTPS is recommended on untrusted networks.
 - Searchable notes list with favorite indicators.
 - Full note view and editing with optimistic concurrency via `ETag`.
+- Markdown-first notes: switch between raw Markdown editing and rendered
+  Markdown preview in the note editor.
 - Loads the last successful notes list from a local cache immediately on startup;
   use Refresh for an explicit server reload.
 - Edited notes are pushed automatically about every 30 seconds while open, or
