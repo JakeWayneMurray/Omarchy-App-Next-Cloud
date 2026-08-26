@@ -105,6 +105,12 @@ FloatingWindow {
     statusProc.running = true
   }
 
+  Shortcut {
+    sequence: "Ctrl+S"
+    enabled: root.page === 2 && !root.busy && !root.currentNote.readonly
+    onActivated: root.saveNote(false)
+  }
+
   Timer {
     interval: 30000
     repeat: true
@@ -176,7 +182,7 @@ FloatingWindow {
             Button { text: "‹ Notes"; bordered: true; onClicked: root.showList() }
             Item { Layout.fillWidth: true }
             Button { text: root.previewMode ? "Edit" : "Preview"; bordered: true; onClicked: root.previewMode = !root.previewMode }
-            Button { text: root.busy ? "Saving…" : "Save"; bordered: true; enabled: !currentNote.readonly && !root.busy; onClicked: root.saveNote(true) }
+            Button { text: root.busy ? "Saving…" : "Save"; bordered: true; enabled: !currentNote.readonly && !root.busy; onClicked: root.saveNote(false) }
           }
           TextField { id: titleField; Layout.fillWidth: true; placeholderText: "Note title"; enabled: !currentNote.readonly; onTextChanged: if (!root.updatingEditor) root.dirty = true }
           Rectangle {
