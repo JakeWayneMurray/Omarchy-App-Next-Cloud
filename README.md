@@ -37,6 +37,23 @@ cd ~/Work/Omarchy-App-Next-Cloud
 makepkg -si
 ```
 
+If this machine used the older manual install method, remove the stale
+per-user launcher and move the old copy out of the way before launching:
+
+```bash
+if [ -e ~/.local/share/applications/nextcloud-notes.desktop ]; then
+  mv ~/.local/share/applications/nextcloud-notes.desktop \
+    ~/.local/share/applications/nextcloud-notes.desktop.old
+fi
+if [ -d ~/.local/lib/omarchy-app-nextcloud-notes ]; then
+  mv ~/.local/lib/omarchy-app-nextcloud-notes \
+    ~/.local/lib/omarchy-app-nextcloud-notes.old
+fi
+```
+
+This ensures the launcher uses the packaged app at
+`/usr/share/omarchy-app-nextcloud-notes/`.
+
 Launch **Nextcloud Notes** from the Omarchy application launcher. The app
 stores its URL and username in `~/.config/omarchy/nextcloud-notes-app/` and
 the password in the desktop keyring.
