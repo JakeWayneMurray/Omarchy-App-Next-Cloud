@@ -125,9 +125,9 @@ Item {
           Item { Layout.fillHeight: true }
         }
 
-        Column {
+        ColumnLayout {
           spacing: Style.space(12)
-          TextField { id: searchField; width: parent.width; placeholderText: "Filter notes…" }
+          TextField { id: searchField; Layout.fillWidth: true; placeholderText: "Filter notes…" }
           ScrollView {
             Layout.fillWidth: true; Layout.fillHeight: true; clip: true
             ListView {
@@ -143,19 +143,19 @@ Item {
               }
             }
           }
-          Text { visible: root.busy; text: "Loading notes…"; color: Qt.darker(Color.foreground, 1.45); font.family: Style.font.family; font.pixelSize: Style.font.caption }
+          Text { visible: root.busy; Layout.fillWidth: true; text: "Loading notes…"; color: Qt.darker(Color.foreground, 1.45); font.family: Style.font.family; font.pixelSize: Style.font.caption }
         }
 
-        Column {
+        ColumnLayout {
           spacing: Style.space(10)
           Row {
-            width: parent.width; spacing: Style.space(8)
+            Layout.fillWidth: true; spacing: Style.space(8)
             Button { text: "‹ Notes"; bordered: true; onClicked: root.showList() }
             Text { text: currentNote.readonly ? "Read-only" : "Edit note"; color: Qt.darker(Color.foreground, 1.45); font.family: Style.font.family; font.pixelSize: Style.font.caption; verticalAlignment: Text.AlignVCenter; Layout.fillWidth: true }
             Button { text: root.busy ? "Saving…" : "Save"; bordered: true; enabled: !currentNote.readonly && !root.busy; onClicked: root.saveNote() }
           }
-          TextField { id: titleField; width: parent.width; placeholderText: "Note title"; enabled: !currentNote.readonly }
-          TextField { id: categoryField; width: parent.width; placeholderText: "Category (optional)"; enabled: !currentNote.readonly }
+          TextField { id: titleField; Layout.fillWidth: true; placeholderText: "Note title"; enabled: !currentNote.readonly }
+          TextField { id: categoryField; Layout.fillWidth: true; placeholderText: "Category (optional)"; enabled: !currentNote.readonly }
           Rectangle {
             Layout.fillWidth: true; Layout.fillHeight: true; color: Qt.darker(Color.background, 1.08); radius: Style.cornerRadius
             TextArea { id: bodyField; anchors.fill: parent; anchors.margins: Style.space(10); wrapMode: TextEdit.Wrap; color: Color.foreground; font.family: Style.font.family; font.pixelSize: Style.font.body; background: null; readOnly: currentNote.readonly }
