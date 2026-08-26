@@ -59,8 +59,13 @@ FloatingWindow {
     cacheProc.command = command(["cache"])
     cacheProc.running = true
   }
-  function openNote(id) {
-    if (busy || !id) return
+  function openNote(note) {
+    if (busy || !note || !note.id) return
+    if (note.content !== undefined) {
+      showEditor(note)
+      return
+    }
+    var id = note.id
     busy = true; clearError()
     getProc.command = command(["get", String(id)])
     getProc.running = true
@@ -153,7 +158,7 @@ FloatingWindow {
                 visible: !searchField.text.trim() || String(modelData.title).toLowerCase().indexOf(searchField.text.trim().toLowerCase()) >= 0
                 height: visible ? Style.space(60) : 0
                 text: (modelData.favorite ? "★ " : "") + String(modelData.title)
-                onClicked: root.openNote(Number(modelData.id))
+                onClicked: root.openNote(modelData)
               }
             }
           }
