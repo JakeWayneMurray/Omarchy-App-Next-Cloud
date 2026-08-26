@@ -23,30 +23,10 @@ notes a full-sized window for reading and editing.
 - Uses Quickshell, Qt Quick Controls, and the installed Omarchy `qs.Commons`
   and `qs.Ui` components; Python is only a small JSON-line API bridge.
 
-## Run locally
+## Install on another Omarchy machine
 
-On Omarchy/Arch, install the runtime dependencies if needed:
-
-```bash
-sudo pacman -S quickshell python libsecret
-./run.sh
-```
-
-The Nextcloud Notes app API is enabled by default in current Notes releases.
-The client tries API v1 first and falls back to v0.2 for older servers.
-
-## Install locally
-
-```bash
-install -Dm755 App.qml nextcloud_client.py run.sh ~/.local/lib/omarchy-app-nextcloud-notes/
-sed "s#^Exec=.*#Exec=$HOME/.local/lib/omarchy-app-nextcloud-notes/run.sh#" \
-  nextcloud-notes.desktop > ~/.local/share/applications/nextcloud-notes.desktop
-```
-
-## Quick install on another Omarchy machine
-
-Install directly from the GitHub repository. This uses the included Arch
-package definition and does not require an AUR account:
+The recommended install uses the repository's `PKGBUILD`; no AUR account is
+required:
 
 ```bash
 sudo pacman -S --needed base-devel git quickshell python libsecret
@@ -57,13 +37,29 @@ cd ~/Work/Omarchy-App-Next-Cloud
 makepkg -si
 ```
 
-Launch **Nextcloud Notes** from the Omarchy application launcher. To update an
-existing installation:
+Launch **Nextcloud Notes** from the Omarchy application launcher. The app
+stores its URL and username in `~/.config/omarchy/nextcloud-notes-app/` and
+the password in the desktop keyring.
+
+To update an existing installation:
 
 ```bash
 cd ~/Work/Omarchy-App-Next-Cloud
 git pull
 makepkg -fsi
+```
+
+The Nextcloud Notes app API is enabled by default in current Notes releases.
+The client tries API v1 first and falls back to v0.2 for older servers.
+
+## Run from a checkout
+
+For development or a quick local test, install the runtime dependencies and
+run the app directly:
+
+```bash
+sudo pacman -S --needed quickshell python libsecret
+./run.sh
 ```
 
 ## Development
