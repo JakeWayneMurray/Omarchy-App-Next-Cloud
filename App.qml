@@ -93,16 +93,15 @@ Item {
       anchors.margins: Style.space(24)
       spacing: Style.space(18)
 
-      Row {
+      RowLayout {
         width: parent.width
         spacing: Style.space(12)
         Text { text: "▤"; color: Color.accent; font.family: Style.font.family; font.pixelSize: Style.font.iconLarge }
         Column {
-          width: parent.width - 170
+          Layout.fillWidth: true
           Text { text: "Nextcloud Notes"; color: Color.foreground; font.family: Style.font.family; font.pixelSize: Style.font.title; font.bold: true }
           Text { text: root.page === 0 ? "Connect your notes" : (root.username + " · " + root.serverUrl); color: Qt.darker(Color.foreground, 1.45); font.family: Style.font.family; font.pixelSize: Style.font.caption; elide: Text.ElideRight; width: parent.width }
         }
-        Item { width: 1; height: 1 }
         Button { visible: root.page === 1; text: "Refresh"; bordered: true; onClicked: root.loadNotes() }
         Button { visible: root.page !== 0; text: "Sign out"; bordered: true; onClicked: root.signOut() }
       }
@@ -172,43 +171,48 @@ Item {
 
   Process {
     id: statusProc
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: {
-      var data = root.output(text, "Could not read Nextcloud settings.")
+    stdout: StdioCollector { id: statusOutput; waitForEnd: true }
+    onExited: {
+      var data = root.output(statusOutput.text, "Could not read Nextcloud settings.")
       if (data.configured === true) { root.serverUrl = String(data.url || ""); root.username = String(data.username || ""); root.page = 1; root.loadNotes() }
-    }}
+    }
   }
   Process {
     id: configureProc; property string secret: ""; stdinEnabled: true
     onStarted: { write(JSON.stringify({url: urlField.text.trim(), username: userField.text.trim(), password: secret}) + "\n"); secret = ""; passwordField.text = ""; stdinEnabled = false }
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: {
-      var data = root.output(text, "Connection failed."); root.busy = false
+    stdout: StdioCollector { id: configureOutput; waitForEnd: true }
+    onExited: {
+      var data = root.output(configureOutput.text, "Connection failed."); root.busy = false
       if (!root.setError(data, "Connection failed.")) return
       root.serverUrl = String(data.url || ""); root.username = String(data.username || ""); root.page = 1; root.loadNotes()
-    }}
+    }
   }
   Process {
     id: listProc
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: {
-      var data = root.output(text, "Could not load notes."); root.busy = false
+    stdout: StdioCollector { id: listOutput; waitForEnd: true }
+    onExited: {
+      var data = root.output(listOutput.text, "Could not load notes."); root.busy = false
       if (!root.setError(data, "Could not load notes.")) return
       notesModel.clear(); (data.notes || []).forEach(function(note) { notesModel.append(note) })
-    }}
+    }
   }
   Process {
     id: getProc
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: {
-      var data = root.output(text, "Could not open note."); root.busy = false
+    stdout: StdioCollector { id: getOutput; waitForEnd: true }
+    onExited: {
+      var data = root.output(getOutput.text, "Could not open note."); root.busy = false
       if (!root.setError(data, "Could not open note.")) return
       root.showEditor(data.note || {})
-    }}
+    }
   }
   Process {
     id: saveProc; property string payload: ""; stdinEnabled: true
     onStarted: { write(payload + "\n"); payload = ""; stdinEnabled = false }
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: {
-      var data = root.output(text, "Could not save note."); root.busy = false
+    stdout: StdioCollector { id: saveOutput; waitForEnd: true }
+    onExited: {
+      var data = root.output(saveOutput.text, "Could not save note."); root.busy = false
       if (!root.setError(data, "Could not save note.")) return
       root.currentNote = data.note || root.currentNote; root.errorMessage = "Saved"; root.showList()
-    }}
+    }
   }
 }
