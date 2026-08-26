@@ -141,7 +141,8 @@ def connection() -> tuple[str, str, str]:
 def normalize(note: dict) -> dict:
     return {"id": int(note.get("id", 0)), "title": str(note.get("title") or "Untitled note"),
             "content": str(note.get("content") or ""), "category": str(note.get("category") or ""),
-            "etag": str(note.get("etag") or ""), "favorite": bool(note.get("favorite", False)),
+            "modified": int(note.get("modified", 0) or 0), "etag": str(note.get("etag") or ""),
+            "favorite": bool(note.get("favorite", False)),
             "readonly": bool(note.get("readonly", False))}
 
 
@@ -171,6 +172,7 @@ def main() -> None:
             if not isinstance(notes, list):
                 raise NotesError("Nextcloud returned an invalid notes list.")
             normalized = [normalize(note) for note in notes if isinstance(note, dict)]
+            normalized.sort(key=lambda note: note["modified"], reverse=True)
             write_cache(normalized)
             emit({"ok": True, "notes": normalized})
         elif command == "cache":
@@ -181,6 +183,7 @@ def main() -> None:
                 notes = []
             if not isinstance(notes, list):
                 notes = []
+            notes.sort(key=lambda note: int(note.get("modified", 0) or 0) if isinstance(note, dict) else 0, reverse=True)
             emit({"ok": True, "cached": CACHE_FILE.exists(), "notes": notes})
         elif command == "get" and len(sys.argv) == 3:
             base, user, password = connection()

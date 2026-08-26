@@ -40,6 +40,13 @@ FloatingWindow {
     if (!data.ok) errorMessage = String(data.error || fallback)
     return data.ok
   }
+  function setNotes(notes) {
+    var ordered = (notes || []).slice().sort(function(a, b) {
+      return Number(b.modified || 0) - Number(a.modified || 0)
+    })
+    notesModel.clear()
+    ordered.forEach(function(note) { notesModel.append(note) })
+  }
   function login() {
     clearError()
     if (!urlField.text.trim() || !userField.text.trim() || !passwordField.text) {
@@ -250,7 +257,7 @@ FloatingWindow {
     onExited: {
       var data = root.output(cacheOutput.text, "Could not read the notes cache.")
       if (data.ok && data.cached) {
-        notesModel.clear(); (data.notes || []).forEach(function(note) { notesModel.append(note) })
+        root.setNotes(data.notes)
         root.page = 1
       } else root.loadNotes()
     }
@@ -271,7 +278,7 @@ FloatingWindow {
     onExited: {
       var data = root.output(listOutput.text, "Could not load notes."); root.busy = false
       if (!root.setError(data, "Could not load notes.")) return
-      notesModel.clear(); (data.notes || []).forEach(function(note) { notesModel.append(note) })
+      root.setNotes(data.notes)
     }
   }
   Process {
@@ -292,12 +299,12 @@ FloatingWindow {
       if (!root.setError(data, "Could not save note.")) return
       root.currentNote = data.note || root.currentNote
       if (data.note) {
+        var updated = []
         for (var i = 0; i < notesModel.count; i++) {
-          if (Number(notesModel.get(i).id) === Number(data.note.id)) {
-            notesModel.set(i, data.note)
-            break
-          }
+          if (Number(notesModel.get(i).id) !== Number(data.note.id)) updated.push(notesModel.get(i))
         }
+        updated.push(data.note)
+        root.setNotes(updated)
       }
       root.dirty = false; root.errorMessage = "Saved"
       if (root.saveReturnToList) root.showList()
