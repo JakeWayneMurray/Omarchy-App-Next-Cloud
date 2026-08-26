@@ -43,6 +43,39 @@ sed "s#^Exec=.*#Exec=$HOME/.local/lib/omarchy-app-nextcloud-notes/run.sh#" \
   nextcloud-notes.desktop > ~/.local/share/applications/nextcloud-notes.desktop
 ```
 
+## Quick install on another Omarchy machine
+
+After creating the GitHub repository at
+`git@github.com:JakeWayneMurray/Omarchy-App-Nextcloud-Notes.git`, run:
+
+```bash
+sudo pacman -S --needed quickshell python libsecret
+mkdir -p ~/Work
+git clone git@github.com:JakeWayneMurray/Omarchy-App-Nextcloud-Notes.git \
+  ~/Work/Omarchy-App-Nextcloud-Notes
+cd ~/Work/Omarchy-App-Nextcloud-Notes
+
+install -Dm755 App.qml nextcloud_client.py run.sh \
+  ~/.local/lib/omarchy-app-nextcloud-notes/
+install -d ~/.local/share/applications
+sed "s#^Exec=.*#Exec=$HOME/.local/lib/omarchy-app-nextcloud-notes/run.sh#" \
+  nextcloud-notes.desktop > ~/.local/share/applications/nextcloud-notes.desktop
+
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database ~/.local/share/applications
+fi
+```
+
+Launch **Nextcloud Notes** from the Omarchy application launcher. To update an
+existing installation:
+
+```bash
+cd ~/Work/Omarchy-App-Nextcloud-Notes
+git pull
+install -Dm644 App.qml ~/.local/lib/omarchy-app-nextcloud-notes/App.qml
+install -Dm755 nextcloud_client.py run.sh ~/.local/lib/omarchy-app-nextcloud-notes/
+```
+
 ## Development
 
 ```bash
