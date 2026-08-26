@@ -1,5 +1,5 @@
 pkgname=omarchy-app-nextcloud-notes
-pkgver=0.1.0.r12.g94660b9
+pkgver=0.1.0.r13.gcbe9287
 pkgrel=1
 pkgdesc='Omarchy-styled Quickshell desktop client for Nextcloud Notes'
 arch=('any')
