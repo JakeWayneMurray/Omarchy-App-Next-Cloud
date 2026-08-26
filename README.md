@@ -45,8 +45,8 @@ To update an existing installation:
 
 ```bash
 cd ~/Work/Omarchy-App-Next-Cloud
-git pull
-makepkg -fsi
+git pull --ff-only
+makepkg -Cfsi
 ```
 
 The Nextcloud Notes app API is enabled by default in current Notes releases.

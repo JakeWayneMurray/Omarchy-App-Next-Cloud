@@ -24,6 +24,10 @@ class NotesError(RuntimeError):
     pass
 
 
+class NotesConflict(NotesError):
+    pass
+
+
 def emit(data: dict) -> None:
     print(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
 
@@ -121,7 +125,7 @@ def request(base: str, username: str, password: str, path: str = "notes", method
         if exc.code in {401, 403}:
             raise NotesError("Nextcloud rejected the credentials or note access.") from exc
         if exc.code == 412:
-            raise NotesError("This note changed on Nextcloud. Reload it before saving again.") from exc
+            raise NotesConflict("This note changed on Nextcloud. Reload it before saving again.") from exc
         raise NotesError(f"Nextcloud returned HTTP {exc.code}.") from exc
     except (urllib.error.URLError, TimeoutError) as exc:
         raise NotesError(f"Could not reach Nextcloud: {getattr(exc, 'reason', exc)}") from exc
@@ -198,7 +202,19 @@ def main() -> None:
             note_id = str(payload.get("id", "")).strip()
             path = f"notes/{urllib.parse.quote(note_id, safe='')}" if note_id else "notes"
             method = "PUT" if note_id else "POST"
-            note = request(base, user, password, path, method, body, str(payload.get("etag", "")))
+            etag = str(payload.get("etag", ""))
+            try:
+                note = request(base, user, password, path, method, body, etag)
+            except NotesConflict:
+                # Some older Notes deployments compare the raw JSON etag while
+                # newer deployments expect the quoted HTTP entity-tag form.
+                # Retry the raw form only when the server still has the exact
+                # note version we opened, so a real concurrent edit is safe.
+                current = request(base, user, password, path, "GET")
+                current_etag = str(current.get("etag", "")) if isinstance(current, dict) else ""
+                if not etag or current_etag != etag.strip('"'):
+                    raise
+                note = request(base, user, password, path, method, body, etag.strip('"'))
             if not isinstance(note, dict):
                 raise NotesError("Nextcloud returned an invalid saved note.")
             normalized = normalize(note)
