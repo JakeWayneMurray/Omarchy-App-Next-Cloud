@@ -108,6 +108,8 @@ def request(base: str, username: str, password: str, path: str = "notes", method
         headers["Content-Type"] = "application/json"
         data = json.dumps(body, ensure_ascii=False).encode()
     if etag:
+        if not etag.startswith('"'):
+            etag = f'"{etag}"'
         headers["If-Match"] = etag
     url = f"{base}/index.php/apps/notes/api/{version}/{path.lstrip('/')}"
     try:
@@ -118,6 +120,8 @@ def request(base: str, username: str, password: str, path: str = "notes", method
             return request(base, username, password, path, method, body, etag, "0.2")
         if exc.code in {401, 403}:
             raise NotesError("Nextcloud rejected the credentials or note access.") from exc
+        if exc.code == 412:
+            raise NotesError("This note changed on Nextcloud. Reload it before saving again.") from exc
         raise NotesError(f"Nextcloud returned HTTP {exc.code}.") from exc
     except (urllib.error.URLError, TimeoutError) as exc:
         raise NotesError(f"Could not reach Nextcloud: {getattr(exc, 'reason', exc)}") from exc
