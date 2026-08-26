@@ -15,7 +15,7 @@ Item {
   property string errorMessage: ""
   property string serverUrl: ""
   property string username: ""
-  property var currentNote: ({})
+  property var currentNote: ({readonly: false})
 
   function command(args) { return ["python3", root.helperPath].concat(args) }
   function clearError() { errorMessage = "" }
