@@ -1,0 +1,15 @@
+pkgbase = omarchy-app-nextcloud-notes
+	pkgdesc = Omarchy-styled Quickshell desktop client for Nextcloud Notes
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/JakeWayneMurray/Omarchy-App-Next-Cloud
+	arch = any
+	license = MIT
+	makedepends = git
+	depends = quickshell
+	depends = python
+	depends = libsecret
+	source = git+https://github.com/JakeWayneMurray/Omarchy-App-Next-Cloud.git
+	sha256sums = SKIP
+
+pkgname = omarchy-app-nextcloud-notes
