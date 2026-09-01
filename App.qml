@@ -17,6 +17,7 @@ FloatingWindow {
   minimumSize: Qt.size(760, 520)
 
   readonly property string helperPath: Qt.resolvedUrl("nextcloud_client.py").toString().replace("file://", "")
+  readonly property string themeStatePath: (Quickshell.env("HOME") || "") + "/.local/state/omarchy/current"
   property int page: 0 // 0 login, 1 notes, 2 editor
   property bool busy: false
   property string errorMessage: ""
@@ -28,6 +29,32 @@ FloatingWindow {
   property bool dirty: false
   property bool saveReturnToList: false
   property bool previewMode: false
+
+  function reloadThemeFiles() {
+    themeColorsFile.reload()
+    themeShellFile.reload()
+  }
+
+  property FileView themeNameFile: FileView {
+    path: root.themeStatePath + "/theme.name"
+    watchChanges: true
+    printErrors: false
+    onLoaded: root.reloadThemeFiles()
+    onFileChanged: reload()
+  }
+  property FileView themeColorsFile: FileView {
+    path: root.themeStatePath + "/theme/colors.toml"
+    watchChanges: false
+    printErrors: false
+    onLoaded: Color.loadColors(text())
+  }
+  property FileView themeShellFile: FileView {
+    path: root.themeStatePath + "/theme/shell.toml"
+    watchChanges: false
+    printErrors: false
+    onLoaded: Color.loadShell(text())
+    onLoadFailed: Color.loadShell("")
+  }
 
   function command(args) { return ["python3", root.helperPath].concat(args) }
   function clearError() { errorMessage = "" }
